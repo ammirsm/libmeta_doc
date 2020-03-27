@@ -11,17 +11,21 @@ info:
     url: 'https://hubmeta.com'
   description: 'Get the data from our library in the hubmeta which is include more than 15k papers which come from one of our cofounders database. This database will fill with users data and it will expand by itself. '
 servers:
-  - url: 'https://lib.hubmeta.com/'
+  - url: 'https://lib.hubmeta.com'
     description: Main
   - url: 'http://localhost:8000'
     description: Local
   - url: 'https://dev.lib.hubmeta.com'
     description: Dev
+tags: 
+  - name: 'Paper'
+  - name: 'Project'
+  - name: 'Task'
 paths:
-  /paper/:
+  /paper:
     parameters: []
     get:
-      summary: Your GET endpoint
+      summary: Search articles
       tags:
         - paper
       responses:
@@ -39,7 +43,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/unauthorized_response'
-      operationId: get-paper-paper_id
+      operationId: get-paper-paper-id
       description: Search paper and get the list of them
       security:
         - sampleAPIkey: []
@@ -48,7 +52,7 @@ paths:
         - $ref: '#/components/parameters/author'
         - $ref: '#/components/parameters/year'
     post:
-      summary: ''
+      summary: Import article
       operationId: post-paper
       responses:
         '200':
@@ -59,24 +63,79 @@ paths:
                 $ref: '#/components/schemas/paper'
         '202':
           description: Accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/task'
+          headers: {}
         '403':
           description: Forbidden
-      description: "Post paper data to database\n\n** if paper with this title be in the database **\n  Add new sample into that with new moderators\n  \n** else**\n  add new paper to database"
+      description: "This will accept XLS, CSV and PDF files.\n\nPost paper data to database\n\n** if paper with this title be in the database **\n  Add new sample into that with new moderators\n  \n** else**\n  add new paper to database"
       security:
         - sampleAPIkey: []
       parameters: []
       requestBody:
         content:
-          application/json:
+          multipart/form-data:
             schema:
               type: object
               properties:
+                paper:
+                  $ref: '#/components/schemas/paper_not_detail'
                 meta_data:
                   type: array
                   items:
                     $ref: '#/components/schemas/moderator_variable_value'
-                detail:
-                  $ref: '#/components/schemas/paper_not_detail'
+                file:
+                  type: string
+                  format: binary
+              required:
+                - paper
+                - meta_data
+      tags:
+        - paper
+  '/task/{id}':
+    get:
+      summary: Your GET endpoint
+      tags:
+        - task
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/task'
+      operationId: get-task
+      security:
+        - sampleAPIkey: []
+      description: It will return the task status.
+    parameters:
+      - schema:
+          type: string
+        name: id
+        in: path
+        required: true
+  '/project/{id}':
+    get:
+      summary: Your GET endpoint
+      tags:
+        - project
+      responses:
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/unauthorized_response'
+      operationId: get-project
+      description: ''
+    parameters:
+      - schema:
+          type: string
+        name: id
+        in: path
+        required: true
 components:
   schemas:
     unauthorized_response:
@@ -354,6 +413,27 @@ components:
           type: string
         moderator_variable:
           $ref: '#/components/schemas/moderator_variable'
+    task:
+      title: task
+      type: object
+      description: Return task object with its action.
+      properties:
+        id:
+          type: string
+        action:
+          type: string
+          enum:
+            - pdf
+            - search
+        status:
+          type: string
+          enum:
+            - pending
+            - started
+            - success
+            - retry
+            - revoked
+            - failure
   securitySchemes:
     sampleAPIkey:
       name: API Key
