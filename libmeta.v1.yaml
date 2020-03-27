@@ -1,0 +1,381 @@
+openapi: 3.0.0
+info:
+  title: libmeta
+  version: '1.0'
+  contact:
+    name: Amirhossein Saeidmehr
+    url: 'https://hubmeta.com'
+    email: amir@hubmeta.com
+  license:
+    name: Copyright 2020 Hubmeta
+    url: 'https://hubmeta.com'
+  description: 'Get the data from our library in the hubmeta which is include more than 15k papers which come from one of our cofounders database. This database will fill with users data and it will expand by itself. '
+servers:
+  - url: 'https://lib.hubmeta.com/'
+    description: Main
+  - url: 'http://localhost:8000'
+    description: Local
+  - url: 'https://dev.lib.hubmeta.com'
+    description: Dev
+paths:
+  /paper/:
+    parameters: []
+    get:
+      summary: Your GET endpoint
+      tags:
+        - paper
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/paper_not_detail'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/unauthorized_response'
+      operationId: get-paper-paper_id
+      description: Search paper and get the list of them
+      security:
+        - sampleAPIkey: []
+      parameters:
+        - $ref: '#/components/parameters/title'
+        - $ref: '#/components/parameters/author'
+        - $ref: '#/components/parameters/year'
+    post:
+      summary: ''
+      operationId: post-paper
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/paper'
+        '202':
+          description: Accepted
+        '403':
+          description: Forbidden
+      description: "Post paper data to database\n\n** if paper with this title be in the database **\n  Add new sample into that with new moderators\n  \n** else**\n  add new paper to database"
+      security:
+        - sampleAPIkey: []
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                meta_data:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/moderator_variable_value'
+                detail:
+                  $ref: '#/components/schemas/paper_not_detail'
+components:
+  schemas:
+    unauthorized_response:
+      title: unauthorized_response
+      type: object
+      description: When the api_key is invalid it will show this reponse
+      x-examples:
+        example-1:
+          code: 403
+          message: "You're not authorized for this page."
+      x-tags:
+        - response
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
+    variable:
+      title: variable
+      type: object
+      x-examples:
+        example-1:
+          id: 6
+          name: Construct 4
+          definition: Construct 4
+          var_type: 2
+          project: 2
+          parent: null
+          citations: []
+          tags: []
+      properties:
+        id:
+          type: number
+        name:
+          type: string
+        defenition:
+          type: string
+        var_type:
+          type: number
+          enum:
+            - measurement
+            - construct
+            - group_construct
+        project:
+          type: number
+        parent:
+          $ref: '#/components/schemas/variable'
+        citations:
+          type: array
+          items:
+            type: string
+        tags:
+          type: array
+          items:
+            type: string
+        sample:
+          $ref: '#/components/schemas/sample'
+    correlation:
+      title: correlation
+      type: object
+      properties:
+        id:
+          type: string
+        order:
+          type: string
+        value:
+          type: string
+        var_type:
+          type: number
+          enum:
+            - min
+            - max
+            - mean
+            - sd
+            - alpha
+            - reverse scale
+            - aggregated
+            - number of items
+            - normal
+        first_variable:
+          $ref: '#/components/schemas/variable'
+        second_variable:
+          $ref: '#/components/schemas/variable'
+        sample:
+          $ref: '#/components/schemas/sample'
+      x-examples:
+        example-1:
+          id: 2
+          order: 2
+          value: '0.60000000'
+          var_type: 5
+          first_variable: 3
+          second_variable: 3
+          sample: 1
+    sample:
+      title: sample
+      type: object
+      x-examples:
+        example-1:
+          - id: 2
+            name: sample 2
+            size: 240
+            note: ''
+            paper: 15
+            data:
+              - id: 1
+                order: 1
+                value: '0.20000000'
+                var_type: 9
+                first_variable:
+                  id: 6
+                  parent: null
+                  name: Construct 4
+                  var_type: 2
+                  usage: 0
+                second_variable:
+                  id: 6
+                  parent: null
+                  name: Construct 4
+                  var_type: 2
+                  usage: 0
+                sample: 1
+              - id: 2
+                order: 2
+                value: '0.60000000'
+                var_type: 5
+                first_variable:
+                  id: 6
+                  parent: null
+                  name: Construct 4
+                  var_type: 2
+                  usage: 0
+                second_variable:
+                  id: 6
+                  parent: null
+                  name: Construct 4
+                  var_type: 2
+                  usage: 0
+                sample: 1
+      description: This model shows each sample data with its correlations
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        size:
+          type: string
+        note:
+          type: string
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/correlation'
+    paper:
+      title: paper
+      type: object
+      x-examples:
+        example-1:
+          id: 63008
+          modified_at: '1585246333'
+          name: The relationship between individualism/collectivism
+          name_without_punc: the relationship between individualismcollectivism
+          author: 'Merkin, R'
+          author_without_punc: merkin r
+          journal: Journal of Intercultural Communication
+          year: 2015
+          link: "('http://mail.immi.se/intercultural/nr39/merkin.html',)"
+          abstract: null
+          language: en
+          project: 2
+          data:
+            - id: 2
+              name: sample 2
+              size: 240
+              note: ''
+              paper: 15
+              data:
+                - id: 1
+                  order: 1
+                  value: '0.20000000'
+                  var_type: 9
+                  first_variable:
+                    id: 6
+                    parent: null
+                    name: Construct 4
+                    var_type: 2
+                    usage: 0
+                  second_variable:
+                    id: 6
+                    parent: null
+                    name: Construct 4
+                    var_type: 2
+                    usage: 0
+                  sample: 1
+                - id: 2
+                  order: 2
+                  value: '0.60000000'
+                  var_type: 5
+                  first_variable:
+                    id: 6
+                    parent: null
+                    name: Construct 4
+                    var_type: 2
+                    usage: 0
+                  second_variable:
+                    id: 6
+                    parent: null
+                    name: Construct 4
+                    var_type: 2
+                    usage: 0
+                  sample: 1
+          related_paper: 63006
+          batch: 23
+          status: 1
+      description: ''
+      properties:
+        id:
+          type: number
+        name:
+          type: string
+          description: |
+            title of the paper
+        modified_at:
+          type: string
+          format: date-time
+          description: modification time
+        name_without_punc:
+          type: string
+        author:
+          type: string
+          description: Authors of the article
+        author_without_punc:
+          type: string
+        journal:
+          type: string
+        year:
+          type: number
+          description: Published year
+        link:
+          type: string
+          description: it should be URL
+          format: uri
+        abstract:
+          type: string
+          description: "Article's abstract"
+        language:
+          type: string
+          description: Language code
+        project:
+          type: string
+          description: The id of the project
+        sample:
+          type: array
+          items:
+            $ref: ''
+        meta_deta:
+          $ref: '#/components/schemas/moderator_variable_value'
+    paper_not_detail:
+      title: paper_not_detail
+      type: object
+      properties:
+        id:
+          type: string
+    moderator_variable:
+      title: moderator_variable
+      type: object
+      properties:
+        id:
+          type: string
+    moderator_variable_value:
+      title: moderator_variable_value
+      type: object
+      properties:
+        id:
+          type: string
+        moderator_variable:
+          $ref: '#/components/schemas/moderator_variable'
+  securitySchemes:
+    sampleAPIkey:
+      name: API Key
+      type: apiKey
+      in: header
+  parameters:
+    title:
+      name: title
+      in: query
+      description: '**Paper title** Search by paper title. *Example: Ethical Leadership with Both "Moral Person" and "Moral Manager" Aspects: Scale Development and Cross-Cultural Validation*'
+      required: true
+      schema:
+        type: string
+    author:
+      name: author
+      in: query
+      description: '**Paper authors** Search by paper title. *Example: Z Liu, Z Xu, Z Zhou, Y Li* You should seperate authors with comma'
+      schema:
+        type: string
+    year:
+      name: year
+      in: query
+      description: '**Paper year** Search by paper year. *Example: 1997* This will filter between [year-2, year+2]'
+      schema:
+        type: number
