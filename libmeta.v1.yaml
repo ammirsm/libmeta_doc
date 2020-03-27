@@ -17,17 +17,13 @@ servers:
     description: Local
   - url: 'https://dev.lib.hubmeta.com'
     description: Dev
-tags: 
-  - name: 'Paper'
-  - name: 'Project'
-  - name: 'Task'
 paths:
   /paper:
     parameters: []
     get:
       summary: Search articles
       tags:
-        - paper
+        - Paper
       responses:
         '200':
           description: OK
@@ -93,12 +89,12 @@ paths:
                 - paper
                 - meta_data
       tags:
-        - paper
+        - Paper
   '/task/{id}':
     get:
-      summary: Your GET endpoint
+      summary: Get task status
       tags:
-        - task
+        - Task
       responses:
         '200':
           description: OK
@@ -106,6 +102,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/task'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/unauthorized_response'
       operationId: get-task
       security:
         - sampleAPIkey: []
@@ -116,12 +118,15 @@ paths:
         name: id
         in: path
         required: true
+        description: This should be a task ID.
   '/project/{id}':
     get:
-      summary: Your GET endpoint
+      summary: Get project data
       tags:
-        - project
+        - Project
       responses:
+        '200':
+          description: OK
         '403':
           description: Forbidden
           content:
@@ -130,12 +135,95 @@ paths:
                 $ref: '#/components/schemas/unauthorized_response'
       operationId: get-project
       description: ''
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/page_size'
     parameters:
       - schema:
           type: string
         name: id
         in: path
         required: true
+        description: This ID should be the id in the task or the id of the project.
+  '/paper/{id}':
+    parameters:
+      - schema:
+          type: string
+        name: id
+        in: path
+        required: true
+        description: This ID should be the id in the task or the id of the project.
+    get:
+      summary: Get paper detailed data
+      tags:
+        - Paper
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/paper'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/unauthorized_response'
+      operationId: get-paper-id
+      description: 'This endpoint will return paper detail with its id, the id will created by task or the database.'
+    post:
+      summary: ''
+      operationId: post-paper-id
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/paper'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/unauthorized_response'
+      description: Change paper details
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/sample'
+  /project:
+    post:
+      summary: Create project task
+      operationId: post-project
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/task'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/unauthorized_response'
+      description: This will create project object
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/project'
+          application/xml:
+            schema:
+              type: object
+              properties: {}
+        description: In this request you should upload project object and get project task.
+      tags:
+        - Project
 components:
   schemas:
     unauthorized_response:
@@ -193,6 +281,7 @@ components:
             type: string
         sample:
           $ref: '#/components/schemas/sample'
+      description: Variable
     correlation:
       title: correlation
       type: object
@@ -230,6 +319,7 @@ components:
           first_variable: 3
           second_variable: 3
           sample: 1
+      description: Correlations in the correlation table
     sample:
       title: sample
       type: object
@@ -350,7 +440,7 @@ components:
           related_paper: 63006
           batch: 23
           status: 1
-      description: ''
+      description: Paper
       properties:
         id:
           type: number
@@ -385,34 +475,111 @@ components:
           type: string
           description: Language code
         project:
-          type: string
-          description: The id of the project
+          $ref: '#/components/schemas/project'
         sample:
           type: array
           items:
-            $ref: ''
+            $ref: '#/components/schemas/sample'
         meta_deta:
-          $ref: '#/components/schemas/moderator_variable_value'
+          type: array
+          items:
+            $ref: '#/components/schemas/moderator_variable_value'
+        hubmeta_id:
+          type: number
+        related_project:
+          type: array
+          items:
+            type: object
+            properties:
+              hubmeta_project_id:
+                type: integer
+              hubmeta_paper_id:
+                type: integer
+        '':
+          type: string
     paper_not_detail:
       title: paper_not_detail
       type: object
+      x-examples:
+        example-1:
+          id: 63008
+          modified_at: '1585246333'
+          name: The relationship between individualism/collectivism
+          name_without_punc: the relationship between individualismcollectivism
+          author: 'Merkin, R'
+          author_without_punc: merkin r
+          journal: Journal of Intercultural Communication
+          year: 2015
+          link: "('http://mail.immi.se/intercultural/nr39/merkin.html',)"
+          abstract: null
+          language: en
+          project: 2
+      description: Paper without its related items like sample and moderators.
       properties:
         id:
           type: string
+        name:
+          type: string
+        name_without_punc:
+          type: string
+        author:
+          type: string
+        author_without_punc:
+          type: string
+        journal:
+          type: string
+        year:
+          type: number
+        link:
+          type: string
+        abstract:
+          type: string
+        language:
+          type: string
+        project:
+          $ref: '#/components/schemas/project'
+        hubmeta_id:
+          type: number
     moderator_variable:
       title: moderator_variable
       type: object
+      x-examples:
+        example-1:
+          id: 3
+          name: sample of that
+          var_type: 1
+          default:
+            amir: ali
       properties:
         id:
           type: string
+        name:
+          type: string
+        var_type:
+          type: string
+        default:
+          type: string
+      description: Moderator variable
     moderator_variable_value:
       title: moderator_variable_value
       type: object
+      x-examples:
+        example-1:
+          id: 3
+          value: '1'
+          moderator_variable:
+            name: sample of that
+            var_type: 1
+            default:
+              amir: ali
       properties:
         id:
           type: string
         moderator_variable:
           $ref: '#/components/schemas/moderator_variable'
+        value:
+          type: string
+      description: Moderator variable value
     task:
       title: task
       type: object
@@ -434,6 +601,20 @@ components:
             - retry
             - revoked
             - failure
+        return_data_id:
+          type: string
+    project:
+      title: project
+      type: object
+      properties:
+        id:
+          type: string
+        paper_list:
+          type: string
+          format: binary
+        user_id:
+          type: string
+      description: Project object is for each objects
   securitySchemes:
     sampleAPIkey:
       name: API Key
@@ -459,3 +640,19 @@ components:
       description: '**Paper year** Search by paper year. *Example: 1997* This will filter between [year-2, year+2]'
       schema:
         type: number
+    page:
+      name: page
+      in: query
+      schema:
+        type: number
+      description: A page number within the paginated result set.
+    page_size:
+      name: page_size
+      in: query
+      description: Number of results to return per page.
+      schema:
+        type: number
+tags:
+  - name: Paper
+  - name: Project
+  - name: Task
