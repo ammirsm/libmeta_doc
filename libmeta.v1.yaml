@@ -582,13 +582,22 @@ components:
       type: object
       description: Return task object with its action.
       properties:
-        id:
-          type: string
+        task_result:
+          $ref: '#/components/schemas/task_result'
         action:
           type: string
           enum:
             - pdf
             - search
+        return_data_id:
+          type: string
+    task_result:
+      title: task_result
+      type: object
+      description: returned after task created.
+      properties:
+        task_id:
+          type: string
         status:
           type: string
           enum:
@@ -598,8 +607,7 @@ components:
             - retry
             - revoked
             - failure
-        return_data_id:
-          type: string
+            
     project:
       title: project
       type: object
