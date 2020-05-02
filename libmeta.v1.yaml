@@ -232,14 +232,11 @@ components:
       description: When the api_key is invalid it will show this reponse
       x-examples:
         example-1:
-          code: 403
-          message: "You're not authorized for this page."
+          detail: "Authentication credentials were not provided."
       x-tags:
         - response
       properties:
-        code:
-          type: integer
-        message:
+        detail:
           type: string
     variable:
       title: variable
