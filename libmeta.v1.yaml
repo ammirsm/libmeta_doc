@@ -62,7 +62,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/task'
+                $ref: '#/components/schemas/task_result'
           headers: {}
         '403':
           description: Forbidden
@@ -232,14 +232,11 @@ components:
       description: When the api_key is invalid it will show this reponse
       x-examples:
         example-1:
-          code: 403
-          message: "You're not authorized for this page."
+          detail: "Authentication credentials were not provided."
       x-tags:
         - response
       properties:
-        code:
-          type: integer
-        message:
+        detail:
           type: string
     variable:
       title: variable
@@ -585,13 +582,22 @@ components:
       type: object
       description: Return task object with its action.
       properties:
-        id:
-          type: string
+        task_result:
+          $ref: '#/components/schemas/task_result'
         action:
           type: string
           enum:
             - pdf
             - search
+        return_data_id:
+          type: string
+    task_result:
+      title: task_result
+      type: object
+      description: returned after task created.
+      properties:
+        task_id:
+          type: string
         status:
           type: string
           enum:
@@ -601,8 +607,7 @@ components:
             - retry
             - revoked
             - failure
-        return_data_id:
-          type: string
+            
     project:
       title: project
       type: object
